@@ -1,5 +1,10 @@
 #pragma once 
 
+typedef struct 
+{
+    
+}AllocationTable;
+
 
 void discInisilize() ;
 void updateAllocationTable() ;
