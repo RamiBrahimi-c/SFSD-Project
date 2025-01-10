@@ -1,13 +1,13 @@
 #include "file.h"
 
-int main() {
+const char secondMemFolder[] = "./secondary memory/" ; 
+const char metaDataFolder[] = "./meta data/" ; 
+char fullPath[40] ;
+char fullPath2[40] ;
 
-    // createFile() ;
-    // renameFile("haha" , "ha") ;
-    deleteFile("ha") ;
+BlocContiguousStructure bufferContiguousStruct ;
+BlocLinkedStructure bufferLinkedStruct ;
 
-    return 0 ;
-}
 
 void createFile() {
     
@@ -45,10 +45,11 @@ void createFile() {
     metaData.recordsNumber ;
 
     chargeFile(metaData.fileName , metaData) ;
+    
 }
 
 
-void chargeFile(const char *fileName  ,const MetaData metaData) {
+void chargeFile( char *fileName  , MetaData metaData) {
     
     strcpy(fullPath , secondMemFolder) ;
     strcat(fullPath , fileName) ;
@@ -76,7 +77,7 @@ void chargeFile(const char *fileName  ,const MetaData metaData) {
 }
 
 
-void renameFile(const char *old_Name,const char *new_Name) {
+void renameFile( char *old_Name, char *new_Name) {
 
     strcpy(fullPath , secondMemFolder) ;
     strcat(fullPath , old_Name) ;
@@ -101,7 +102,7 @@ void renameFile(const char *old_Name,const char *new_Name) {
 }
 
 
-void deleteFile(const char *fileName) {
+void deleteFile( char *fileName) {
     strcpy(fullPath , secondMemFolder) ;
     strcat(fullPath , fileName) ;
      
@@ -122,7 +123,7 @@ void deleteFile(const char *fileName) {
 
 // not tested
 
-void searchRecord(const char *fileName,const int id , int *result) {
+void searchRecord( char *fileName, int id , int *result) {
     
     strcpy(fullPath2 , metaDataFolder) ;
     strcpy(fullPath2 , fileName) ;
@@ -152,7 +153,7 @@ void searchRecord(const char *fileName,const int id , int *result) {
 }
 
 // not tested
-void searchRecordContiguousStructure(FILE *ptr , const int id, int *result , MetaData metadata) {
+void searchRecordContiguousStructure(FILE *ptr ,  int id, int *result , MetaData metadata) {
 
     rewind(ptr) ;
     fseek(ptr , 0 , SEEK_END) ;
@@ -164,7 +165,7 @@ void searchRecordContiguousStructure(FILE *ptr , const int id, int *result , Met
     result[0]=-1 ;
     result[1]=-1 ;
 
-    if (metadata.internOrganizationMode == "s") { // binary search
+    if (metadata.internOrganizationMode == 's') { // binary search
         int left , right  , mid  ; 
         
             fseek(ptr , metadata.firstBlocAddress * sizeof(bufferContiguousStruct) , SEEK_SET) ;
@@ -216,7 +217,7 @@ void searchRecordContiguousStructure(FILE *ptr , const int id, int *result , Met
 }
 
 // not tested
-void searchRecordLinkedStructure(FILE *ptr , const int id, int *result , MetaData metadata) {
+void searchRecordLinkedStructure(FILE *ptr ,  int id, int *result , MetaData metadata) {
     
     rewind(ptr) ;
     fseek(ptr , 0 , SEEK_END) ;
@@ -228,7 +229,7 @@ void searchRecordLinkedStructure(FILE *ptr , const int id, int *result , MetaDat
     result[0]=-1 ;
     result[1]=-1 ;
 
-    if (metadata.internOrganizationMode == "s") { // binary search on both record level  && linear search on record level 
+    if (metadata.internOrganizationMode == 's') { // binary search on both record level  && linear search on record level 
         int left , right  , mid  ; 
         
         int i = metadata.firstBlocAddress ;
@@ -285,7 +286,7 @@ void searchRecordLinkedStructure(FILE *ptr , const int id, int *result , MetaDat
 }
 
 
-void insertRecord(const char *fileName ) {
+void insertRecord( char *fileName ) {
     strcpy(fullPath2 , metaDataFolder) ;
     strcpy(fullPath2 , fileName) ;
 
@@ -334,12 +335,13 @@ void insertRecordContiguousStructure(FILE *ptr, MetaData *metadata , Product pro
     int k = metadata->recordsNumber ;
 
 
-        int i = metadata->firstBlocAddress , k = length ;
+        int i = metadata->firstBlocAddress ;
+         k = length ;
 
     fseek(ptr , k * sizeof(bufferContiguousStruct) , SEEK_SET) ;
     fread(&bufferContiguousStruct , sizeof(bufferContiguousStruct) , 1 , ptr) ;
 
-    if (metadata->internOrganizationMode == "s") { // insert in right position 
+    if (metadata->internOrganizationMode == 's') { // insert in right position 
         if (bufferContiguousStruct.nbBloc >= metadata->recordsNumber)
         {
 
@@ -408,7 +410,7 @@ void insertRecordContiguousStructure(FILE *ptr, MetaData *metadata , Product pro
 
 
 
-void deleteRecordLogically(const char *fileName , int id) {
+void deleteRecordLogically( char *fileName , int id) {
     strcpy(fullPath2 , metaDataFolder) ;
     strcpy(fullPath2 , fileName) ;
 
@@ -447,7 +449,7 @@ void deleteRecordLogically(const char *fileName , int id) {
     }
     int i = result[0] , j = result[1] ;
 
-    if (metadata.globalOrganizationMode == "c") {
+    if (metadata.globalOrganizationMode == 'c') {
         fseek(ptr , i * sizeof(bufferContiguousStruct) , SEEK_SET) ;
         fread(&bufferContiguousStruct , sizeof(bufferContiguousStruct) , 1 , ptr ) ;
 
@@ -463,7 +465,7 @@ void deleteRecordLogically(const char *fileName , int id) {
 
 }
 
-void deleteRecordPhysically(const char *fileName ,int id ) {
+void deleteRecordPhysically( char *fileName ,int id ) {
     strcpy(fullPath2 , metaDataFolder) ;
     strcpy(fullPath2 , fileName) ;
 
@@ -503,7 +505,7 @@ void deleteRecordPhysically(const char *fileName ,int id ) {
     int i = result[0] , j = result[1] ;
 
 
-    if (metadata.globalOrganizationMode == "c") {
+    if (metadata.globalOrganizationMode == 'c') {
         fseek(ptr , i * sizeof(bufferContiguousStruct) , SEEK_SET) ;
         fread(&bufferContiguousStruct , sizeof(bufferContiguousStruct) , 1 , ptr ) ;
 
@@ -534,7 +536,8 @@ void insertRecordLinkedStructure(FILE *ptr , MetaData *metadata  , Product produ
 
     int k = metadata->recordsNumber ;
 
-        int i = metadata->firstBlocAddress , k = -1 ;
+        int i = metadata->firstBlocAddress ;
+         k = -1 ;
         while (i < metadata->blocsNumber && i != -1){
             fread(&bufferLinkedStruct , sizeof(bufferLinkedStruct) , 1 , ptr) ;
             k= i ;
@@ -544,7 +547,7 @@ void insertRecordLinkedStructure(FILE *ptr , MetaData *metadata  , Product produ
             
 
 
-    if (metadata->internOrganizationMode == "s") { //  
+    if (metadata->internOrganizationMode == 's') { //  
         if (bufferLinkedStruct.nbBloc >= metadata->recordsNumber)
         {
 
@@ -699,7 +702,7 @@ void insertRecordLinkedStructureinNewBloc() {
 
 
 
-void defregmentate() ;
+void create() ;
 
 
 int calculateFileLength(FILE *ptr) ;

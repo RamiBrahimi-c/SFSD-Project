@@ -58,35 +58,33 @@ typedef struct
 
 
 
-const char secondMemFolder[] = "./secondary memory/" ; 
-const char metaDataFolder[] = "./meta data/" ; 
-char fullPath[40] ;
-char fullPath2[40] ;
-
-BlocContiguousStructure bufferContiguousStruct ;
-BlocLinkedStructure bufferLinkedStruct ;
 
 
 void createFile() ;
-void renameFile(const char * ,const char *) ;
-void deleteFile(const char *) ;
-void chargeFile(const char *  ,const MetaData) ;
-void searchRecord(const char *,const int , int *) ;
-void insertRecord(const char * ) ;
+void renameFile( char * , char *) ;
+void deleteFile( char *) ;
+void chargeFile( char *  , MetaData) ;
+void searchRecord( char *, int , int *) ;
+void insertRecord( char * ) ;
 
 void defregmentate() ;
 
-void deleteRecordLogically(const char * , int ) ;
+void deleteRecordLogically( char * , int ) ;
+
+void deleteRecordPhysically( char * ,int  )  ;
 
 void deleteRecordPhysicallyLinkedStructure(FILE* ,  MetaData * , int ) ;
 
 
-void searchRecordLinkedStructure(FILE * , const int , int * , MetaData) ;
+void searchRecordLinkedStructure(FILE * ,  int , int * , MetaData) ;
 
-void searchRecordContiguousStructure(FILE * , const int , int * , MetaData) ;
+void searchRecordContiguousStructure(FILE * ,  int , int * , MetaData) ;
 
 void insertRecordContiguousStructure(FILE * , MetaData * , Product) ;
 void insertRecordLinkedStructure(FILE * , MetaData * , Product ) ;
+
+
+
 
 // additional 
 
@@ -97,3 +95,4 @@ void setFullPathtoMetadataFolder(char * ) ;
 
 int calculateFileLength(FILE *) ;
 void checkifCharUppercase(char *c) ;
+int deleteRecordfromArray(Product * , int  ,int ) ;

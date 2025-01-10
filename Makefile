@@ -1,2 +1,2 @@
 all:
-	gcc main.c -o main -lSDL2 && ./main
+	gcc file.c main.c secondMem.c -o main -lSDL2 -lSDL2_ttf && ./main
