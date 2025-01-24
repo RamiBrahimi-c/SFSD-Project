@@ -7,7 +7,8 @@
 #define MAX_SIZE_FILENAME 20
 #define MAX_SIZE_BLOCS_NUMBER 40
 #define MAX_SIZE_RECORDS_NUMBER 20
-
+#define MAX_PRODUCTS_NUMBER 30
+#define MAX_SIZE_PRODUCT_NAME 30
 
 #if defined(_WIN32)
     #include <direct.h>
@@ -27,7 +28,7 @@ typedef struct
 {
     int id ;
     int deletedLogically ;
-    char name[MAX_SIZE_FILENAME] ;
+    char name[MAX_SIZE_PRODUCT_NAME] ;
     double cost ;
 }Product;
 
@@ -52,6 +53,7 @@ typedef struct
     int blocsNumber ;
     int recordsNumber ;
     int firstBlocAddress ;
+    int totalNumberProducts ;
     char globalOrganizationMode ;
     char internOrganizationMode ;
 }MetaData;
@@ -61,8 +63,13 @@ typedef struct
 
 
 void createFile() ;
-void renameFile( char * , char *) ;
-void deleteFile( char *) ;
+
+int renameFile( char * , char *) ;
+void renameFileMetaData( char * , char *) ;
+
+int deleteFile( char *) ;
+int deleteFileMetaData( char *) ;
+
 void chargeFile( char *  , MetaData) ;
 void searchRecord( char *, int , int *) ;
 void insertRecord( char * ) ;
@@ -83,7 +90,7 @@ void searchRecordContiguousStructure(FILE * ,  int , int * , MetaData) ;
 void insertRecordContiguousStructure(FILE * , MetaData * , Product) ;
 void insertRecordLinkedStructure(FILE * , MetaData * , Product ) ;
 
-
+void printMetaData(char *) ;
 
 
 // additional 

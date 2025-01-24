@@ -21,8 +21,17 @@ void createFile() {
     fgets(metaData.fileName , sizeof(metaData.fileName) , stdin) ;
         metaData.fileName[strcspn(metaData.fileName, "\n")] = '\0'; // Remove newline
 
-    printf("enter records number : ");
+    printf("enter records number (blockage factor) : ");
     scanf("%d" , &metaData.recordsNumber) ;
+    
+
+    do
+    {
+        printf("enter products number : ");
+        scanf("%d" , &metaData.recordsNumber);        
+    } while (metaData.recordsNumber < 1 || metaData.recordsNumber > MAX_PRODUCTS_NUMBER);
+    
+
     do {
         printf("enter global organization mode linked or contiguous (l/c): ") ;
         scanf(" %c" , &metaData.globalOrganizationMode) ;
@@ -33,15 +42,16 @@ void createFile() {
         scanf(" %c" , &metaData.internOrganizationMode) ;
          checkifCharUppercase(&metaData.internOrganizationMode) ;
     } while (metaData.internOrganizationMode != 's' && metaData.internOrganizationMode != 'n') ;
-
-/*     printf("you entered : \n");
+    getchar() ;
+ /*     printf("you entered : \n");
     printf(" file name : %s \n" , metaData.fileName);
     printf(" records number : %d \n" , metaData.recordsNumber);
     printf(" global organization mode linked or contiguous (l/c): %c \n" , metaData.globalOrganizationMode) ;
     printf(" intern organization mode sorted or non (s/n): %c \n" , metaData.internOrganizationMode) ;
  */
     // ?????????????????????????????????????????????????????????????????????????????????
-    metaData.firstBlocAddress ;
+
+    metaData.firstBlocAddress=0 ;
     metaData.recordsNumber ;
 
     chargeFile(metaData.fileName , metaData) ;
@@ -59,6 +69,11 @@ void chargeFile( char *fileName  , MetaData metaData) {
             printf("couldn't open the file named : %s \n" , fullPath) ;
             return ;
         }
+
+
+
+
+
     fclose(ptr) ;
 
     ptr = NULL ;
@@ -73,16 +88,44 @@ void chargeFile( char *fileName  , MetaData metaData) {
             return ;
         }
 
+        fwrite(&metaData , sizeof(metaData) , 1 , ptr) ;
+
     fclose(ptr) ;
 }
 
 
-void renameFile( char *old_Name, char *new_Name) {
+int renameFile( char *old_Name, char *new_Name) {
 
     strcpy(fullPath , secondMemFolder) ;
     strcat(fullPath , old_Name) ;
 
     strcpy(fullPath2 , secondMemFolder) ;
+    strcat(fullPath2 , new_Name) ;
+
+    // printf("old name : %s\nnew name : %s \n" , fullPath , fullPath2);
+
+    if (rename(fullPath , fullPath2)  == 0) {
+        printf("File renamed successfully\n");
+        return 1 ;
+    } else {
+        if (errno == ENOENT) {
+            printf("Error: File '%s' does not exist\n", old_Name);
+        } else if (errno == EACCES) {
+            printf("Error: Permission denied\n");
+        } else {
+            perror("Error renaming file");
+        }
+        return -1 ;
+    }
+
+}
+
+void renameFileMetaData( char *old_Name , char *new_Name) {
+
+    strcpy(fullPath , metaDataFolder) ;
+    strcat(fullPath , old_Name) ;
+
+    strcpy(fullPath2 , metaDataFolder) ;
     strcat(fullPath2 , new_Name) ;
 
     // printf("old name : %s\nnew name : %s \n" , fullPath , fullPath2);
@@ -101,14 +144,14 @@ void renameFile( char *old_Name, char *new_Name) {
 
 }
 
-
-void deleteFile( char *fileName) {
+int deleteFile( char *fileName) {
     strcpy(fullPath , secondMemFolder) ;
     strcat(fullPath , fileName) ;
      
 
        if (remove(fullPath) == 0) {
         printf("File deleted successfully\n");
+        return 1 ;
     } else {
         if (errno == ENOENT) {
             printf("Error: File '%s' does not exist\n", fileName);
@@ -117,9 +160,31 @@ void deleteFile( char *fileName) {
         } else {
             perror("Error deleting file");
         }
+            return -1 ;
     }
     
 }
+int deleteFileMetaData( char *metadata)  {
+    strcpy(fullPath2 , metaDataFolder) ;
+    strcat(fullPath2 , metadata) ;
+     
+
+       if (remove(fullPath2) == 0) {
+        printf("File deleted successfully\n");
+        return 1 ;
+    } else {
+        if (errno == ENOENT) {
+            printf("Error: File '%s' does not exist\n", metadata);
+        } else if (errno == EACCES) {
+            printf("Error: Permission denied\n");
+        } else {
+            perror("Error deleting file");
+        }
+            return -1 ;
+    }
+    
+}
+
 
 // not tested
 

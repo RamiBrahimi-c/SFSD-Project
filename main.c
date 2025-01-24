@@ -125,7 +125,7 @@ void displayOptions(SDL_Renderer *renderer ,    SDL_Texture* textTexture ,SDL_Su
     char *option3 = "[s] : show the state of secondary memory ." ;
     char *option4 = "[a] : add record ." ;
     char *option5= "[d] : delete record (logically or physically) ." ;
-    char *option6 = "[] : defragmenate a file." ;
+  //  char *option6 = "[] : defragmenate a file." ;
     char *option7 = "[f] : delete file  ." ;
     char *option8 = "[r] : rename file  ." ;
     char *option9 = "[c] : compactage of secondary memory ." ;
@@ -138,7 +138,7 @@ void displayOptions(SDL_Renderer *renderer ,    SDL_Texture* textTexture ,SDL_Su
     displayOption(renderer,textTexture, textSurface, font , option3 , posX , posY + 2*offset) ;
     displayOption(renderer,textTexture, textSurface, font , option4 , posX , posY + 3* offset ) ;
     displayOption(renderer,textTexture, textSurface, font , option5 , posX , posY + 4 * offset) ;
-    displayOption(renderer,textTexture, textSurface, font , option6 , posX , posY + 5 * offset ) ;
+  //  displayOption(renderer,textTexture, textSurface, font , option6 , posX , posY + 5 * offset ) ;
     displayOption(renderer,textTexture, textSurface, font , option7 , posX , posY + 6 * offset ) ;
     displayOption(renderer,textTexture, textSurface, font , option8 , posX , posY + 7 * offset) ;
     displayOption(renderer,textTexture, textSurface, font , option9 , posX , posY + 8 * offset ) ;
@@ -245,7 +245,39 @@ void displaySecondaryMem(SDL_Renderer *renderer ,    SDL_Texture* textTexture ,S
 
 
 
+void returntoMainMenu(SDL_Renderer *renderer ,    SDL_Texture* textTexture ,SDL_Surface* textSurface , TTF_Font* font , char *text ) {
+    SDL_SetRenderDrawColor(renderer , 0,0,0,255) ;
+    int posX=WINDOW_WIDTH/2-WINDOW_WIDTH/4 , posY=WINDOW_HEIGHT-40 ;
 
+    SDL_Color textColor = {0,255,0,255} ;
+    textSurface = TTF_RenderText_Solid(font, text, textColor);
+    if (textSurface == NULL) {
+                printf("Unable to createtextSurface! SDL_Error: %s\n", SDL_GetError());
+                return;
+    }
+    textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+    if (textTexture == NULL) {
+                printf("Unable to create texture from rendered text! SDL_Error: %s\n", SDL_GetError());
+                return;
+    }
+
+
+            // Free the text surface
+    SDL_FreeSurface(textSurface);
+
+
+        // Only render the text if the texture was successfully created
+
+            int textWidth = 0, textHeight = 0;
+            SDL_QueryTexture(textTexture, NULL, NULL, &textWidth, &textHeight);
+            SDL_Rect textRect = {posX,posY, textWidth, textHeight}; // Dynamic size based on text
+
+
+                SDL_RenderFillRect(renderer, &textRect);
+            SDL_RenderCopy(renderer, textTexture, NULL, &textRect);    
+
+
+}
 
 
 
@@ -257,10 +289,8 @@ int main() {
     srand(time(NULL));
 
     AllocationTable allocationTable  ;
-    for (int i = 0; i < MAX_FILES; i++)
-    {
-        allocationTable.files[i].used=0 ;
-    }
+
+    readAllocationTable(&allocationTable) ;
     
 
     SDL_Init(0) ;
@@ -338,66 +368,100 @@ int main() {
         {
             if (event.type == SDL_QUIT)
             {
+                writeAllocationTable(allocationTable) ;
                 running = false ;
                 break;
             }
-            else if(event.type == SDL_KEYDOWN)
+            else if(event.type == SDL_KEYDOWN && state != 1)
             {
                 switch (event.key.keysym.sym)
                 {
                     case SDLK_ESCAPE:
-                    running=false ;
-                    break;
+                        writeAllocationTable(allocationTable) ;
+                        running=false ;
+                            break;
+                    case SDLK_p :
+                        printAllocationTable(allocationTable) ;
+                       // system("clear");
+                            break;                            
                     case SDLK_q:
-                    running=false ;
-                    break;
+                        writeAllocationTable(allocationTable) ;
+                        running=false ;
+                            break;
                     case SDLK_c:
+                        system("clear");
                         createFile() ;
                         updateAllocationTable(&allocationTable , 1) ;
-                        
-                    break;
+                            break;
                     case SDLK_i:
                         discInisilize(&allocationTable) ;
                         
-                    break;
+                            break;
                     case SDLK_s:
-                    state=1 ;
-                    break;
+                    state=(state == 1) ? 0 : 1 ;
+                            break;
                     case SDLK_a:
+                        system("clear");
                         insertRecord("") ;
-                    break;
+                            break;
                     case SDLK_d:
-                    int i ;
-                    printf("0.Logical deletion \t 1.Physical deletion \n") ;
-                    scanf("%d" , &i) ;
-                    (i==1) ? deleteRecordPhysically(" " , 0) : deleteRecordLogically(" " , 0) ;
+                        system("clear");
+                        int i ;
+                        printf("0.Logical deletion \t 1.Physical deletion \n") ;
+                        scanf("%d" , &i) ;
+                        (   i==1) ? deleteRecordPhysically(" " , 0) : deleteRecordLogically(" " , 0) ;
 
-                    break;
-
+                            break;
+                    // valid
                     case SDLK_f:
-                    char temp_f[20] ;
-                    printf("enter file Name : \n") ;
-                    fgets(temp_f ,sizeof(temp_f) , stdin ) ;
-
-                        deleteFile(temp_f) ;
-                    break;
+                        system("clear");
+                        char temp_f[20] ;
+                        printf("enter file Name : \n") ;
+                        fgets(temp_f ,sizeof(temp_f) , stdin ) ;
+                        temp_f[strlen(temp_f)-1] = temp_f[strlen(temp_f)-1]=='\n' ? '\0' : temp_f[strlen(temp_f)-1] ;
+                            int k = 0 ;
+                         ( k = deleteFile(temp_f) > 0 ) ? updateAllocationTable(&allocationTable , 0) : 1 ;
+                            if (k>0) deleteFileMetaData(temp_f) ;
+                            break;
+                    
                     case SDLK_r:
+                        system("clear");
                         char temp[20] , temp2[20];
                         printf("enter file Name : \n") ;
                         fgets(temp ,sizeof(temp) , stdin ) ;
+                        temp[strlen(temp)-1] = (temp[strlen(temp)-1] =='\n') ? '\0' : temp[strlen(temp)-1] ;
+                        
                         printf("enter new file Name : \n") ;
                         fgets(temp2 ,sizeof(temp2) , stdin ) ;
+                        temp2[strlen(temp2)-1] = (temp2[strlen(temp2)-1] =='\n') ? '\0' : temp2[strlen(temp2)-1] ;
 
-                        renameFile(temp , temp2) ;
-                    break;
+                        
+                            if(renameFile(temp , temp2)>0) renameFileMetaData(temp , temp2) ;
+
+                            break;
                     case SDLK_e:
+                        system("clear");
                         emptySecondaryMemory() ;
-                    break;
+                        formatAllocationTable(&allocationTable) ;
+                            break;
+
 
                     default :
-                        break;
+                                break;
                 }
-
+                    //system("clear");
+            } else if (event.type == SDL_KEYDOWN && state == 1) {
+                switch (event.key.keysym.sym)
+                {
+                case SDLK_s:
+                    state = 0 ;
+                    break;
+                case SDLK_q :
+                    running=0 ;
+                    break;
+                default:
+                    break;
+                }
             }
         }
 
@@ -411,6 +475,8 @@ int main() {
             {
             case 1:
                 displaySecondaryMem(renderer , textTexture , textSurface , font , font3 , allocationTable) ;
+                //displayOption(renderer , textTexture , textSurface , font3 , "PRESS [S] TO RETURN TO MAIN MENU" , 200 , WINDOW_HEIGHT-50) ;
+                returntoMainMenu(renderer , textTexture , textSurface , font3 ,"PRESS [S] TO RETURN TO MAIN MENU" ) ;
                 break;
             default:
                 renderText(renderer,textTexture, textSurface, font  , result);
