@@ -7,7 +7,7 @@
 #define MAX_SIZE_FILENAME 20
 #define MAX_SIZE_BLOCS_NUMBER 40
 #define MAX_SIZE_RECORDS_NUMBER 20
-#define MAX_PRODUCTS_NUMBER 30
+#define MAX_PRODUCTS_NUMBER 100
 #define MAX_SIZE_PRODUCT_NAME 30
 
 #if defined(_WIN32)
@@ -21,6 +21,17 @@
 
 
 
+enum COLORS {
+    BLACK , 
+    RED ,
+    GREEN ,
+    YELLOW ,
+    BLUE ,
+    PURPLE ,
+    CYAN ,
+    WHITE
+};
+    typedef enum COLORS COLORS ;
 
 
 
@@ -36,7 +47,8 @@ typedef struct
 typedef struct 
 {
     int nbBloc ;
-    Product product[MAX_SIZE_RECORDS_NUMBER] ; 
+    // Product product[MAX_SIZE_RECORDS_NUMBER] ; 
+    Product *product ; 
 }BlocContiguousStructure;
 
 
@@ -62,7 +74,7 @@ typedef struct
 
 
 
-void createFile() ;
+void createFile(  char [MAX_SIZE_FILENAME]) ;
 
 int renameFile( char * , char *) ;
 void renameFileMetaData( char * , char *) ;
@@ -88,10 +100,27 @@ void searchRecordLinkedStructure(FILE * ,  int , int * , MetaData) ;
 void searchRecordContiguousStructure(FILE * ,  int , int * , MetaData) ;
 
 void insertRecordContiguousStructure(FILE * , MetaData * , Product) ;
+
+int insertRecordContigiousStructure2(FILE *ptr , MetaData *metadata , Product product) ;
+
 void insertRecordLinkedStructure(FILE * , MetaData * , Product ) ;
 
-void printMetaData(char *) ;
 
+
+void createFileBasedOnMetaDataContiguousStructure(FILE *,MetaData ) ;
+
+void displayFileContent(char * ) ;
+
+
+void cleanString(char []) ;
+
+void printMetadata(char *) ;
+
+
+
+
+void printErrorMessage(char *, COLORS ) ;
+        
 
 // additional 
 

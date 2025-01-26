@@ -10,6 +10,7 @@ typedef struct
 {
     int num ;
     int used ;
+    char fileName[MAX_SIZE_FILENAME] ;
 }file;
 
 
@@ -25,7 +26,7 @@ typedef struct
 
 
 void discInisilize(AllocationTable *allocationTable) ;
-void updateAllocationTable(AllocationTable *allocationTable , int mode) ;
+void updateAllocationTable(AllocationTable *allocationTable , int mode , char *) ;
 void compactage() ;
 void emptySecondaryMemory() ;
 void stockageSpaceManagement() ;
@@ -38,6 +39,14 @@ void printAllocationTable(AllocationTable allocationTable) ;
 void readAllocationTable(AllocationTable *allocationTable) ;
 
 void writeAllocationTable(AllocationTable allocationTable) ;
+
+
+
+int isTherethisFile(AllocationTable , char []) ;
+
+
+
+
 
 
 AllocationTable getAllocationTable() ;

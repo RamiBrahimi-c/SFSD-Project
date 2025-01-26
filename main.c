@@ -11,7 +11,6 @@
 #define WINDOW_HEIGHT 480
 
 
-        
 
 void renderText(SDL_Renderer *renderer ,    SDL_Texture* textTexture ,SDL_Surface* textSurface , TTF_Font* font  , char *result) {
   SDL_SetRenderDrawColor(renderer , 0,0,0,255) ;
@@ -359,7 +358,6 @@ int main() {
     bool running = true ;
     SDL_Event event ;
 
-    
     int state=0 ;
 
     while (running)
@@ -380,29 +378,62 @@ int main() {
                         writeAllocationTable(allocationTable) ;
                         running=false ;
                             break;
-                    case SDLK_p :
+                    case SDLK_p : // print allocation table
+                       system("clear");
                         printAllocationTable(allocationTable) ;
-                       // system("clear");
                             break;                            
-                    case SDLK_q:
+                    case SDLK_q: // save allocation table and exit program
                         writeAllocationTable(allocationTable) ;
                         running=false ;
                             break;
-                    case SDLK_c:
+                    case SDLK_c: // create file and charge it to allocation table 
                         system("clear");
-                        createFile() ;
-                        updateAllocationTable(&allocationTable , 1) ;
+                        if (allocationTable.length + 1 < MAX_FILES)
+                        {
+                            char temp_c[MAX_SIZE_FILENAME] ;
+                            printf("enter file name : ") ;
+                            fgets(temp_c , sizeof(temp_c) , stdin) ;
+
+                            cleanString(temp_c) ;
+                            if (isTherethisFile(allocationTable , temp_c)<0) 
+                            {
+                                createFile(temp_c) ;
+                                updateAllocationTable(&allocationTable , 1 , temp_c) ;                        
+                            }
+                            else
+                            {
+                                printf("THE FILE ALREADY EXIST\n") ;
+                            }
+                            
+
+                        } else {
+                            printf("THE DISK IS FULL\n") ;
+                        }
+                        
                             break;
-                    case SDLK_i:
+                    case SDLK_i: // inisilize the disk
                         discInisilize(&allocationTable) ;
                         
                             break;
-                    case SDLK_s:
-                    state=(state == 1) ? 0 : 1 ;
+                    case SDLK_s: // switch between the gui 
+                        state=(state == 1) ? 0 : 1 ;
                             break;
                     case SDLK_a:
                         system("clear");
-                        insertRecord("") ;
+                        char temp_a[MAX_SIZE_FILENAME] ;
+                        printf("enter file name : ");
+                        fgets(temp_a , sizeof(temp_a) , stdin) ;
+                        cleanString(temp_a) ;
+                        if (isTherethisFile(allocationTable  , temp_a) < 0)
+                        {
+                            printErrorMessage("THERE IS NOT FILE WITH THIS NAME" , RED) ;
+                        }
+                        else
+                        {
+                            insertRecord(temp_a) ;
+                            
+                        }
+                         
                             break;
                     case SDLK_d:
                         system("clear");
@@ -418,10 +449,20 @@ int main() {
                         char temp_f[20] ;
                         printf("enter file Name : \n") ;
                         fgets(temp_f ,sizeof(temp_f) , stdin ) ;
-                        temp_f[strlen(temp_f)-1] = temp_f[strlen(temp_f)-1]=='\n' ? '\0' : temp_f[strlen(temp_f)-1] ;
+                        cleanString(temp_f) ;
+                         int result = isTherethisFile(allocationTable , temp_f) ;
+                         if (result < 0)
+                         {
+                            printErrorMessage("THIS FILE DOESN'T EXIST" , RED) ;
+                         }
+                         else
+                         {
+                            
                             int k = 0 ;
-                         ( k = deleteFile(temp_f) > 0 ) ? updateAllocationTable(&allocationTable , 0) : 1 ;
+                            ( k = deleteFile(temp_f) > 0 ) ? updateAllocationTable(&allocationTable , 0 , temp_f) : 1 ;
                             if (k>0) deleteFileMetaData(temp_f) ;
+                         }
+                         
                             break;
                     
                     case SDLK_r:
@@ -429,14 +470,26 @@ int main() {
                         char temp[20] , temp2[20];
                         printf("enter file Name : \n") ;
                         fgets(temp ,sizeof(temp) , stdin ) ;
-                        temp[strlen(temp)-1] = (temp[strlen(temp)-1] =='\n') ? '\0' : temp[strlen(temp)-1] ;
-                        
-                        printf("enter new file Name : \n") ;
-                        fgets(temp2 ,sizeof(temp2) , stdin ) ;
-                        temp2[strlen(temp2)-1] = (temp2[strlen(temp2)-1] =='\n') ? '\0' : temp2[strlen(temp2)-1] ;
-
-                        
+                        cleanString(temp) ;
+                         result = isTherethisFile(allocationTable , temp) ; 
+                        if (result > -1)
+                        {
+                            printf("enter new file Name : \n") ;
+                            fgets(temp2 ,sizeof(temp2) , stdin ) ;
+                            cleanString(temp2) ;
+                                    
                             if(renameFile(temp , temp2)>0) renameFileMetaData(temp , temp2) ;
+                            strcpy(allocationTable.files[result].fileName , temp2) ;
+                        }
+                        else
+                        {
+                            COLORS color = RED ;
+                            printErrorMessage("THE FILE DOESN'T EXIST  " , color) ;
+                            /* code */
+                        }
+                        
+
+    
 
                             break;
                     case SDLK_e:
@@ -444,9 +497,45 @@ int main() {
                         emptySecondaryMemory() ;
                         formatAllocationTable(&allocationTable) ;
                             break;
+                    case SDLK_j :
 
+                        char temp_j[MAX_SIZE_FILENAME] ;
+                        printf("enter file name : ");
+                        fgets(temp_j , sizeof(temp_j) , stdin) ;
+                        cleanString(temp_j) ;
 
+                        if (isTherethisFile(allocationTable , temp_j)<0)
+                        {
+                            printErrorMessage("THERE IS NOT FILE WITH THIS NAME" , RED) ;
+                        }
+                        else
+                        {
+                            displayFileContent(temp_j) ;
+                            
+                        }
+                        
+                            break;                           
+
+                    case SDLK_y:
+                            system("clear") ;
+                        break;
+                    case SDLK_z :
+                        char temp_z[MAX_SIZE_FILENAME] ;
+                        printf("enter fileName : ");
+                        fgets(temp_z , sizeof(temp_z) , stdin) ;
+                        cleanString(temp_z) ;
+                        if (isTherethisFile(allocationTable , temp_z) < 0)
+                        {
+                            printErrorMessage("THIS FILE DOESN'T EXIST" , RED) ;
+                        }
+                        else
+                        {
+                            printMetadata(temp_z) ;
+                        }
+                        
+                        break;    
                     default :
+                        printf("%s\n" , allocationTable.files[2].fileName);
                                 break;
                 }
                     //system("clear");

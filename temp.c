@@ -4,7 +4,7 @@
 
 int main() {
 
-    FILE *ptr = fopen("allocation table/metadata" , "rb+") ;
+/*     FILE *ptr = fopen("allocation table/metadata" , "rb+") ;
     if (ptr == NULL)
     {
         printf("can't open file");
@@ -13,10 +13,14 @@ int main() {
     AllocationTable allocationTable ;
 
     readAllocationTable(&allocationTable) ;
-    updateAllocationTable(&allocationTable , 0) ;
+    updateAllocationTable(&allocationTable , 0,"h") ;
     printAllocationTable(allocationTable) ;
 
 
-    fclose(ptr) ;
+    fclose(ptr) ; */
+
+
+
+    
     return 0 ;
 }

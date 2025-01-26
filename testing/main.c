@@ -1,56 +1,5 @@
 #include "../file.h"
-
-
-void createFileBasedOnMetaData(MetaData metadata) {
-     
-    char temp[25] ;
-    strcpy(temp , "./") ;
-    strcat(temp , metadata.fileName) ;
-
-    FILE *ptr = fopen(temp , "wb+");
-    
-        if (ptr==NULL)
-    {
-        printf("can't create file Name %s" , temp) ;
-        return;
-    } 
-
-    FILE *product = fopen("products" , "rb+");
-    if (product == NULL)
-    {
-        printf("can't open products file \n");
-        return ;
-    }   
-
-        printf("total number = %d blockage factor = %d \n" , metadata.totalNumberProducts , metadata.recordsNumber) ;
-    
-    
-        BlocContiguousStructure buffer ;
-        int j = 0 ; int y = 0 ;
-        int i = 0 ;
-    while ( i < metadata.totalNumberProducts)
-    {
-        printf("************************** bloc number %d ********************\n", y++);
-            int k = 0 ;
-        while (k<metadata.recordsNumber && i < metadata.totalNumberProducts)
-        {
-            fread(&(buffer.product[k]) , sizeof(buffer.product[k]) , 1 , product) ;
-            
-           printf("Product ID: %d, Name: %s, Cost: %.2f, Deleted: %d  \n" , 
-                         buffer.product[k].id , buffer.product[k].name   ,buffer.product[k].cost ,buffer.product[k].deletedLogically  ) ;
-            // printf("i=%d\tj=%d\tk=%d\n" , i , j , k) ;
-            ++k  ;++i ; ++j;
-        }
-        buffer.nbBloc = k ;
-            fwrite(&(buffer) , sizeof(buffer) , 1 , ptr);
-        printf("after charging k=%d \n", buffer.nbBloc);
-    }
-    
-    
-}
-
-
-
+#include <time.h>
 
 // ***************************************************************************************************
 // ***************************************************************************************************
@@ -86,6 +35,9 @@ void createFileLinkedStructureBasedOnMetaData(MetaData metadata) {
     
     
         BlocLinkedStructure buffer ;
+
+        
+
         int j = 1 ; int y = 0 ;
         int i = 0 ;
     while ( i < metadata.totalNumberProducts)
@@ -196,9 +148,55 @@ void writeProducts() {
 
 }
 
-void readProducts() {
 
-    FILE *ptr = fopen("products" , "rb+") ;
+
+void swap2Products(Product *product1 , Product *product2) {
+    Product temp ;
+    
+    temp.cost = product1->cost ;
+    temp.deletedLogically = product1->deletedLogically ;
+    temp.id = product1->id ;
+    strcpy(temp.name , product1->name) ;
+
+    product1->cost = product2->cost ;
+    product1->deletedLogically = product2->deletedLogically ;
+    product1->id = product2->id ;
+    strcpy(product1->name , product2->name) ;
+    
+    product2->cost = temp.cost ;
+    product2->deletedLogically = temp.deletedLogically ;
+    product2->id = temp.id ;
+    strcpy(product2->name , temp.name) ;
+
+}
+
+void shuffleProducts(Product arr[] , int length) {
+
+    int totalTimes = 200 ;
+
+    int i = 0 ;
+    int firstIndex , secondIndex ;
+
+    while (i < totalTimes)
+    {
+        firstIndex = rand() % length ;
+        secondIndex = rand() % length ;
+
+        swap2Products(arr + firstIndex , arr + secondIndex ) ;
+
+        ++i ;
+    }
+     
+
+
+}
+
+
+void readProducts(char mode) {
+
+    char *fileName = (mode == 's') ? "products" : "products(shuffled)" ;
+
+    FILE *ptr = fopen(fileName , "rb+") ;
     if (ptr == NULL)
     {
         printf("couldn't open products file !\n");
@@ -216,6 +214,8 @@ void readProducts() {
   
     
         fread(products  , sizeof(Product)*100 , 1 , ptr) ;
+
+
     for (int i = 0; i < 100; i++)
     {
         printf("Product ID: %d, Name: %s, Cost: %.2f, Deleted: %d\n",
@@ -224,20 +224,44 @@ void readProducts() {
   
   
     }
+    
     fseek(ptr , 0 , SEEK_END) ;
     int length =  ftell(ptr)/sizeof(Product) ;
     printf("lenght = %d \n" ,length ) ;  
+
+
+/* 
+        shuffleProducts(products , 100) ;
+    int cont ;
+        printf("continue ? : ");
+        scanf("%d" , &cont);
+        if (!cont)
+            return;
+        
+        
+
+    FILE *ptr2 = fopen("products(shuffled)" , "wb+") ;
+        if (ptr2==NULL)
+    {
+        printf("can't open products(shuffled) file !\n");
+        return;
+    }
+    
+
+
+     fwrite(products  , sizeof(Product)*100 , 1 , ptr2) ; */
 
 }
 
 
 
-void displayFileContent(MetaData metadata) {
-        char temp[25] ;
+void createFileBasedOnMetaData(MetaData metadata) {
+     
+    char temp[25] ;
     strcpy(temp , "./") ;
     strcat(temp , metadata.fileName) ;
 
-    FILE *ptr = fopen(temp , "rb+");
+    FILE *ptr = fopen(temp , "wb+");
     
         if (ptr==NULL)
     {
@@ -245,84 +269,376 @@ void displayFileContent(MetaData metadata) {
         return;
     } 
 
+    FILE *product = fopen("products" , "rb+");
+    if (product == NULL)
+    {
+        printf("can't open products file \n");
+        return ;
+    }   
+
+        // printf("total number = %d blockage factor = %d \n" , metadata.totalNumberProducts , metadata.recordsNumber) ;
+    
+    
+
+
+
+        BlocContiguousStructure buffer ;
+
+        
+ 
+        int j = 0 , i = 0 ; 
+        while ( i < metadata.totalNumberProducts)
+    {
+
+        int totalNumBlocs = metadata.totalNumberProducts / metadata.recordsNumber ;
+        totalNumBlocs += (metadata.totalNumberProducts % metadata.recordsNumber == 0 ) ? 0 : 1 ;
+        // printf("total num blocs : %d\n" , totalNumBlocs);
+        if (j < totalNumBlocs-1)
+        {
+            buffer.nbBloc = metadata.recordsNumber ;
+            buffer.product = malloc(sizeof(Product)*buffer.nbBloc) ;
+            }
+        else if (j == totalNumBlocs-1)
+        {
+            buffer.nbBloc = metadata.totalNumberProducts%metadata.recordsNumber ;
+            buffer.product = malloc(sizeof(Product) * (buffer.nbBloc)) ;
+        }
+        
+
+
+        printf("************************** bloc number %d ********************\n", j + 1);
+            int k = 0 ;
+        while (k<metadata.recordsNumber && i < metadata.totalNumberProducts)
+        {
+            
+            fread(&(buffer.product[k]) , sizeof(Product) , 1 , product) ;
+           printf("Product ID: %d, Name: %s, Cost: %.2f, Deleted: %d  \n" , 
+                    buffer.product[k].id , buffer.product[k].name   ,buffer.product[k].cost ,buffer.product[k].deletedLogically  ) ;
+            
+            ++k  ;++i ; 
+        }
+            //buffer.nbBloc = k ;
+            fwrite(&(buffer.nbBloc) , sizeof(buffer.nbBloc) , 1 , ptr);
+            fwrite((buffer.product) , sizeof(Product) , buffer.nbBloc , ptr);
+        printf("(after charging ) buffer.nbBloc = %d \n", buffer.nbBloc);
+            free(buffer.product) ;
+        
+        ++j;
+    }
+    
+    
+}
+
+
+/* void displayFileContent(FILE *ptr,MetaData metadata) {
+
+
+        printf("*****************************************************************************\n");
 
         printf("total number = %d blockage factor = %d \n" , metadata.totalNumberProducts , metadata.recordsNumber) ;
     
     
         BlocContiguousStructure buffer ;
-        int j = 0 ; int y = 0 ;
+        
+        int j = 0 ; 
         int i = 0 ;
-        while ( i < metadata.totalNumberProducts)
+
+
+        while ( i < metadata.totalNumberProducts  )
     {
-        printf("************************** bloc number %d ********************\n", y++);
+        int totalNumBlocs = metadata.totalNumberProducts / metadata.recordsNumber ;
+        totalNumBlocs += (metadata.totalNumberProducts % metadata.recordsNumber == 0 ) ? 0 : 1 ;
+        if (j < totalNumBlocs-1)
+        {
+            buffer.nbBloc = metadata.recordsNumber ;
+            buffer.product = malloc(sizeof(Product)*buffer.nbBloc) ;
+            }
+        else if (j == totalNumBlocs-1)
+        {
+            buffer.nbBloc = metadata.totalNumberProducts%metadata.recordsNumber ;
+            buffer.product = malloc(sizeof(Product) * (buffer.nbBloc)) ;
+        }
+   
+   
+   
+   
+        printf("************************** bloc number %d ********************\n", j + 1);
             int k = 0 ;
-            fread(&(buffer) , sizeof(buffer) , 1 , ptr) ;
+            fread(&(buffer.nbBloc) , sizeof(buffer.nbBloc) , 1 , ptr) ;
+            int result = fread((buffer.product) , sizeof(Product) , metadata.recordsNumber , ptr) ;
+
+
             while (k<metadata.recordsNumber && i < metadata.totalNumberProducts)
         {
             
             printf("Product ID: %d, Name: %s, Cost: %.2f, Deleted: %d  \n" , 
                          buffer.product[k].id , buffer.product[k].name   ,buffer.product[k].cost ,buffer.product[k].deletedLogically  ) ;
-            printf("i=%d\tj=%d\tk=%d\n" , i , j , k) ;
-            ++k  ;++i ; ++j;
+          
+            ++k  ;++i ; 
+        
         }
-        buffer.nbBloc = k ;
-        printf("after charging k=%d \n", buffer.nbBloc);
+        printf("after charging buffer.nbBloc =%d \n", buffer.nbBloc);
+        free(buffer.product) ;
+        ++j ;
     }
 
+        printf("********************************\n");
         fseek(ptr , 0 , SEEK_END) ;
         int length =  ftell(ptr)/sizeof(Product) ;
         printf("lenght = %d \n" ,length ) ;  
 
+        printf("**********************************************************************\n");
+
+}
+ */
+
+
+
+
+
+int insertRecordTest(FILE *ptr , MetaData *metadata , Product product) {
+       BlocContiguousStructure buffer ;
+        
+        int j = 0 ; 
+        int i = 0 ;
+
+
+        while ( j < metadata->blocsNumber  )
+    {
+        
+        int totalNumBlocs = metadata->blocsNumber ;
+        if (j < totalNumBlocs-1)
+        {
+            buffer.nbBloc = metadata->recordsNumber ;
+            buffer.product = malloc(sizeof(Product)*buffer.nbBloc) ;
+            }
+        else if (j == totalNumBlocs-1)
+        {
+            buffer.nbBloc = metadata->totalNumberProducts%metadata->recordsNumber ;
+            buffer.product = malloc(sizeof(Product) * (buffer.nbBloc)) ;
+        }
+   
+   
+   
+   
+        printf("************************** bloc number %d ********************\n", j + 1);
+            int k = 0 ;
+            fread(&(buffer.nbBloc) , sizeof(buffer.nbBloc) , 1 , ptr) ;
+            int result = fread((buffer.product) , sizeof(Product) , metadata->recordsNumber , ptr) ;
+
+        if (buffer.nbBloc < metadata->recordsNumber)
+        {
+            int u = buffer.nbBloc ;
+            /*
+            while (u<buffer.nbBloc)
+            {
+                if (buffer.product[u].deletedLogically != 0)
+                    break;
+                else 
+                ++u ;
+            }
+            u = (u < buffer.nbBloc) ? u : --u  ;*/
+            buffer.product[u].cost = product.cost ;
+            buffer.product[u].deletedLogically = product.deletedLogically ;
+            buffer.product[u].id = product.id ;
+            strcpy(buffer.product[u].name , product.name );
+
+            buffer.nbBloc++ ;
+
+            fseek(ptr , -sizeof(Product) , SEEK_CUR ) ;
+            fseek(ptr , -sizeof(buffer.nbBloc) , SEEK_CUR ) ;
+            fwrite(&buffer.nbBloc, sizeof(buffer.nbBloc) , 1 , ptr ) ;
+            fwrite(buffer.product, sizeof(Product) , buffer.nbBloc , ptr ) ;
+
+            return 1 ;
+        }
+        
+        free(buffer.product) ;
+        ++j ;
+    }
+}
+
+
+
+
+void displayFile(FILE *ptr , MetaData metadata) {
+    rewind(ptr);
+     
+     
+     
+     
+     
+        printf("*****************************************************************************\n");
+
+        printf("total number = %d blockage factor = %d \n" , metadata.totalNumberProducts , metadata.recordsNumber) ;
+    
+    
+        BlocContiguousStructure buffer ;
+        
+        int j = 0 ; 
+        int i = 0 ;
+
+
+        while ( i < metadata.totalNumberProducts  )
+    {
+        int totalNumBlocs = metadata.totalNumberProducts / metadata.recordsNumber ;
+        totalNumBlocs += (metadata.totalNumberProducts % metadata.recordsNumber == 0 ) ? 0 : 1 ;
+        if (j < totalNumBlocs-1)
+        {
+            buffer.nbBloc = metadata.recordsNumber ;
+            buffer.product = malloc(sizeof(Product)*buffer.nbBloc) ;
+            }
+        else if (j == totalNumBlocs-1)
+        {
+            buffer.nbBloc = metadata.totalNumberProducts%metadata.recordsNumber ;
+            buffer.product = malloc(sizeof(Product) * (buffer.nbBloc)) ;
+        }
+   
+   
+   
+   
+        printf("************************** bloc number %d ********************\n", j + 1);
+            int k = 0 ;
+            fread(&(buffer.nbBloc) , sizeof(buffer.nbBloc) , 1 , ptr) ;
+            int result = fread((buffer.product) , sizeof(Product) , metadata.recordsNumber , ptr) ;
+
+
+            while (k<metadata.recordsNumber && i < metadata.totalNumberProducts)
+        {
+            
+            printf("Product ID: %d, Name: %s, Cost: %.2f, Deleted: %d  \n" , 
+                         buffer.product[k].id , buffer.product[k].name   ,buffer.product[k].cost ,buffer.product[k].deletedLogically  ) ;
+          
+            ++k  ;++i ; 
+        
+        }
+        printf("after charging buffer.nbBloc =%d \n", buffer.nbBloc);
+        free(buffer.product) ;
+        ++j ;
+    }
+
+        printf("********************************\n");
+        fseek(ptr , 0 , SEEK_END) ;
+        int length =  ftell(ptr)/sizeof(Product) ;
+        printf("lenght = %d \n" ,length ) ;  
+
+        printf("*****************************************************************************\n");
 
 }
 
 
-int main() {
 
+int insertRecordTest2(FILE *ptr , MetaData *metadata , Product product) {
+
+    rewind(ptr) ;
+
+    BlocContiguousStructure buffer ;
+
+        buffer.product = malloc(sizeof(Product)*3 );
+
+
+        int t =metadata->blocsNumber-1;
+        fseek(ptr , sizeof(buffer.nbBloc) * t  ,SEEK_SET  ) ;
+        fseek(ptr , sizeof(Product) * 3 * t,SEEK_CUR  ) ;
+        fread(&buffer.nbBloc , sizeof(buffer.nbBloc) , 1 , ptr) ;
+        fread(buffer.product , sizeof(Product) , 3 , ptr) ;
+
+
+
+
+        int index = buffer.nbBloc ;
+        buffer.product[index].cost =     product.cost  ;
+        buffer.product[index].deletedLogically =  product.deletedLogically ;
+        buffer.product[index].id =  product.id ;
+        strcpy(buffer.product[index].name , product.name) ;
+
+        buffer.nbBloc++  ;
+
+
+
+        printf("********************adding this ****************************\n%d\n", buffer.nbBloc);
+
+        for (int i = 0; i < buffer.nbBloc; i++)
+        {
+                printf("Product ID: %d, Name: %s, Cost: %.2f, Deleted: %d  \n" , 
+                            buffer.product[i].id , buffer.product[i].name   ,buffer.product[i].cost ,buffer.product[i].deletedLogically  ) ;
+
+        }
+        printf("************************************************************************\n");
+
+        rewind(ptr) ;
+        fseek(ptr , sizeof(buffer.nbBloc) * t  ,SEEK_SET  ) ;
+        fseek(ptr , sizeof(Product) * 3 * t,SEEK_CUR  ) ;
+        fwrite(&buffer.nbBloc , sizeof(buffer.nbBloc) , 1 , ptr) ;
+        fwrite(buffer.product , sizeof(Product) , buffer.nbBloc , ptr) ;
+
+        metadata->totalNumberProducts++ ;
+}
+
+
+
+int main() {
+    srand(time(0)) ;
 
     int i ;
 
     char sentence[100] ;
 
 
+
+
+
+
+
+
+
+
 //    writeProducts() ;    
     // readProducts() ;
 
 
-    MetaData metadata = {"testing"};
+    MetaData metadata = {"file"};
     metadata.totalNumberProducts = 11 ;
     metadata.recordsNumber = 3 ;
-    displayFileContent(metadata) ;
-  //  createFileBasedOnMetaData(metadata) ;
-    // writeProducts() ;
-    // readProducts() ;
-
-/* 
+    metadata.blocsNumber = 4 ;
+    metadata.globalOrganizationMode = 'c' ;
+    metadata.internOrganizationMode = 'n' ;
 
 
-    FILE *ptr = fopen("../meta data/test" , "rb+") ;
-    if (ptr==NULL)
+    FILE *ptr = fopen("y" , "rb+") ;
+    if (ptr == NULL)
     {
-        printf("can't open meta data file\n");
-        return 1;
+        printf("can't open test file \n");
+        return 1 ;
     }
-    MetaData metadata ;
-    fread(&metadata , sizeof(metadata) , 1 , ptr) ;
-    fseek(ptr , 0 , SEEK_END) ;
-    printf("size : %d\n" , ftell(ptr)/sizeof(metadata) ) ;
-    printf("blocs number  filename  first bloc number  global organization mode  intern organization mode  records number\n");
-    printf("%d\t%s\t%d\t%c\t%c\t%d\n" , metadata.blocsNumber , metadata.fileName , metadata.firstBlocAddress , metadata.globalOrganizationMode , metadata.internOrganizationMode , metadata.recordsNumber ) ;
- */ 
+
+        Product product ;
+
+        product.cost = 5000 ;
+        product.id = 1000 ;
+        product.deletedLogically=0 ;
+        strcpy(product.name , "we are cooked") ;
+
+
+
+
+    displayFile(ptr , metadata) ;
+
+    insertRecordTest2(ptr , &metadata , product) ;
+
+    displayFile(ptr , metadata) ;
+
+
+
+
 /* 
-    printf("enter number : ");
-    scanf("%d" , &i) ;
-    getchar() ;
+    
 
-    printf("enter sentence : ");
-    fgets(sentence , sizeof(sentence) , stdin) ;
-    sentence[strlen(sentence)-1]= sentence[strlen(sentence)-1]=='\n' ? '\0' : sentence[strlen(sentence)-1] ;
-
-    printf("you entered %d and %s \n" , i , sentence) ;
+    rewind(ptr) ;
+    metadata.totalNumberProducts++ ;
+    displayFile(ptr , metadata) ;
  */
-    return 0 ;
+    
+
+   return 0 ;
 }

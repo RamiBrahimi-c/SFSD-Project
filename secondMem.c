@@ -20,12 +20,14 @@ void discInisilize(AllocationTable *allocationTable ) {
     
     getchar();
     allocationTable->blockageFactor = m ;
-    allocationTable->totalNumberOfBlocs = n ;
+    allocationTable->totalNumberOfBlocs = MAX_FILES ;
     allocationTable->totalNumberOfUsedBlocs=0 ;
     allocationTable->length=0 ;
     for (int i = 0; i < MAX_FILES; i++)
     {
         allocationTable->files[i].used=0 ;
+        allocationTable->files[i].num = i ;
+        strcpy(allocationTable->files[i].fileName , "null") ;
     }
     
     const char *dirname = "secondary memory";
@@ -47,19 +49,27 @@ void discInisilize(AllocationTable *allocationTable ) {
 
 
 
-void updateAllocationTable(AllocationTable *allocationTable , int mode ) {
+void updateAllocationTable(AllocationTable *allocationTable , int mode  , char *fileName) {
     if (mode==1)
     {
         
         allocationTable->files[allocationTable->length].used = 1 ;
+        strcpy(allocationTable->files[allocationTable->length].fileName , fileName) ;
         allocationTable->length++ ;
         allocationTable->totalNumberOfUsedBlocs++ ;
-        
     }
     else
     {
 
-        allocationTable->files[allocationTable->length-1].used = 0 ;
+        int index = isTherethisFile(*allocationTable, fileName) ;
+        if(index == -1)
+            return ;
+
+
+        allocationTable->files[index].used = 0 ;
+     
+        strcpy(allocationTable->files[index].fileName , "NULL") ;
+
         allocationTable->length-- ;
         allocationTable->totalNumberOfUsedBlocs-- ;
         
@@ -67,16 +77,34 @@ void updateAllocationTable(AllocationTable *allocationTable , int mode ) {
 }
 
 void printAllocationTable(AllocationTable allocationTable) {
+        char *RESET = "\033[0m";     // Reset (default color)
+    char *black = "\033[1;30m";  // Black
+    char *red = "\033[1;31m";    // Red
+    char *green = "\033[1;32m";  // Green
+    char *yellow = "\033[1;33m"; // Yellow
+    char *blue = "\033[1;34m";   // Blue
+    char *purple = "\033[1;35m"; // Purple
+    char *cyan = "\033[1;36m";   // Cyan
+    char *white = "\033[1;37m";  // White
 
-        printf("total number of blocs %d  \n", allocationTable.totalNumberOfBlocs);
-        printf("total number of used blocs %d  \n", allocationTable.totalNumberOfUsedBlocs);
-        printf("blocage factor : %d  \n", allocationTable.blockageFactor);
-        printf("length : %d \n" , allocationTable.length) ;
+
+    printf("***************************************************************\n") ;
+    printf("************************%s Allocation Table %s*********************\n" , green , RESET ) ;
+    printf("***************************************************************\n") ;
+        printf("total number of blocs :\t%d  \n", allocationTable.totalNumberOfBlocs);
+        printf("total number of used blocs :\t%d  \n", allocationTable.totalNumberOfUsedBlocs);
+        // printf("blocage factor : %d  \n", allocationTable.blockageFactor);
+        printf("length :\t%d \n" , allocationTable.length) ;
+        printf("-------------------------------------------------------------\n") ;
+        printf("file number\tfile name   \t (used or no)\n") ;
+        printf("-------------------------------------------------------------\n") ;
         for (int j = 0; j < 7; j++)
         {
-            printf("file number : %d \t %s \n" , allocationTable.files[j].num , allocationTable.files[j].used == 1 ?  "used" : "not used");
+            printf("%d\t\t %s  \t\t %s  \n" , allocationTable.files[j].num , (allocationTable.files[j].used>0) ? allocationTable.files[j].fileName :"null"  , (allocationTable.files[j].used == 1) ?  "used" : "not used");
         }
+        printf("-------------------------------------------------------------\n") ;
 
+    printf("***************************************************************\n") ;
 
 }
 
@@ -130,8 +158,10 @@ void writeAllocationTable(AllocationTable allocationTable) {
 void formatAllocationTable(AllocationTable *allocationTable) {
     allocationTable->totalNumberOfUsedBlocs = 0 ;
     allocationTable->length = 0 ;
-    for(int i=0 ; i < 7 ; ++i)
+    for(int i=0 ; i < 7 ; ++i){
         allocationTable->files[i].used=0 ;
+        strcpy( allocationTable->files[i].fileName, "null");
+    }
 }
 
 int remove_directory_contents(const char *path) {
@@ -146,24 +176,65 @@ int remove_directory_contents(const char *path) {
 #endif
     return system(command);
 }
-/* 
+
+
+
+
+
+int isTherethisFile(AllocationTable allocationTable, char fileName[MAX_SIZE_FILENAME]) {
+    for (int i = 0; i < allocationTable.length; i++)
+        if (strcmp(fileName , allocationTable.files[i].fileName) ==0)
+            return i ;
+        
+    return -1 ;
+    
+}
+
+
+
+
+
+
+
+
+
+
+
+#if 0
+
+
  int main() {
 
     AllocationTable allocationTable ;
 
-    allocationTable.blockageFactor =5;
-    allocationTable.files[0].num ;
-    allocationTable.files[0].used ;
-    allocationTable.length=0 ;
-    allocationTable.totalNumberOfBlocs=7 ;
-    allocationTable.totalNumberOfUsedBlocs=0 ;
+     
+ 
+    readAllocationTable(&allocationTable) ;
 
-    for (int i = 0; i < 7; i++)
-    {
-        allocationTable.files[i].num=i+1 ;
-        allocationTable.files[i].used=0 ;
-    }
+    allocationTable.length = 4 ;
+    allocationTable.files[0].used = 1 ;
+    strcpy(allocationTable.files[0].fileName , "rami") ;
 
+    allocationTable.files[1].used = 1 ;
+    strcpy(allocationTable.files[1].fileName , "sara") ;
+
+    allocationTable.files[2].used = 1 ;
+    strcpy(allocationTable.files[2].fileName , "assinet") ;
+
+    allocationTable.files[3].used = 1 ;
+    strcpy(allocationTable.files[3].fileName , "israa") ;
+
+
+    printAllocationTable(allocationTable) ;
+    int r ;
+       printf("%s    %d \n" ,(r =  isTherethisFile( allocationTable, "sara"  ) > -1) ? "yes" : "no" ,r ) ;
+    
+    
+    return 0;
+
+
+
+/* 
     printf("***************** before updating ********************\n");
     
 
@@ -186,6 +257,8 @@ int remove_directory_contents(const char *path) {
     readAllocationTable(&al) ;
 
     printAllocationTable(al) ;
- 
+ */ 
     return 0 ;
-}  */
+}   
+
+#endif
