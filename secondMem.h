@@ -17,7 +17,7 @@ typedef struct
 typedef struct 
 {
     int totalNumberOfBlocs ;
-    int blockageFactor ;
+   // int blockageFactor ;
     int totalNumberOfUsedBlocs ;
     file files[MAX_FILES] ;
     int length ;

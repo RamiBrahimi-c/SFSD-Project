@@ -55,7 +55,8 @@ typedef struct
 typedef struct BlocLinkedStructure 
 {
     int nbBloc ;
-    Product product[MAX_SIZE_RECORDS_NUMBER] ; 
+    // Product product[MAX_SIZE_RECORDS_NUMBER] ; 
+    Product *product ; 
     int next ;
 }BlocLinkedStructure;
 
@@ -83,7 +84,7 @@ int deleteFile( char *) ;
 int deleteFileMetaData( char *) ;
 
 void chargeFile( char *  , MetaData) ;
-void searchRecord( char *, int , int *) ;
+void searchRecord( char *fileName, int id , int *result) ;
 void insertRecord( char * ) ;
 
 void defregmentate() ;
@@ -109,7 +110,13 @@ void insertRecordLinkedStructure(FILE * , MetaData * , Product ) ;
 
 void createFileBasedOnMetaDataContiguousStructure(FILE *,MetaData ) ;
 
+void createFileLinkedStructureBasedOnMetaData(FILE * ,MetaData ) ;
+
 void displayFileContent(char * ) ;
+void displayFileContentContiguous(FILE * , MetaData ) ;
+
+void displayFileLinkedStruct(FILE * , MetaData ) ;
+
 
 
 void cleanString(char []) ;

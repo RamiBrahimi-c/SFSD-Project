@@ -80,7 +80,7 @@ void displayOption(SDL_Renderer *renderer ,    SDL_Texture* textTexture ,SDL_Sur
 SDL_SetRenderDrawColor(renderer , 255,255,255,255) ;
     SDL_Rect border ;
     border.w = WINDOW_WIDTH - 40 ;
-    border.h = WINDOW_HEIGHT - 150 ;
+    border.h = WINDOW_HEIGHT - 120 ;
     border.x = 10 ; 
     border.y = 90 ;
     SDL_RenderDrawRect(renderer , &border) ;
@@ -118,18 +118,23 @@ SDL_SetRenderDrawColor(renderer , 0,0,0,255) ;
 
 void displayOptions(SDL_Renderer *renderer ,    SDL_Texture* textTexture ,SDL_Surface* textSurface , TTF_Font* font  ) {
   SDL_SetRenderDrawColor(renderer , 0,0,0,255) ;
-    int posX = 50 , posY = 150 ;
+    int posX = 70 , posY = 130 ;
     char *option1 = "[i] : Inisilize the Secondary Memory ." ;
     char *option2 = "[c] : create file and charge it in secondary memory ." ;
     char *option3 = "[s] : show the state of secondary memory ." ;
     char *option4 = "[a] : add record ." ;
     char *option5= "[d] : delete record (logically or physically) ." ;
-  //  char *option6 = "[] : defragmenate a file." ;
+    char *option6 = "[j] : print file content." ;
     char *option7 = "[f] : delete file  ." ;
     char *option8 = "[r] : rename file  ." ;
     char *option9 = "[c] : compactage of secondary memory ." ;
     char *option10 = "[e] : empty the secondary memory  ." ;
-    char *option11 = "[q] : quit the program ." ;
+    char *option11 = "[p] : print allocation table  ." ;
+    char *option12 = "[z] : print meta data of specific file  ." ;
+    char *option13 = "[y] : clear terminal screen  ." ;
+    char *option14 = "[o] : search for record  ." ;
+
+    char *option15 = "[q] : quit the program ." ;
 
     int offset = 19 ;
     displayOption(renderer,textTexture, textSurface, font , option1 , posX , posY) ;
@@ -137,14 +142,18 @@ void displayOptions(SDL_Renderer *renderer ,    SDL_Texture* textTexture ,SDL_Su
     displayOption(renderer,textTexture, textSurface, font , option3 , posX , posY + 2*offset) ;
     displayOption(renderer,textTexture, textSurface, font , option4 , posX , posY + 3* offset ) ;
     displayOption(renderer,textTexture, textSurface, font , option5 , posX , posY + 4 * offset) ;
-  //  displayOption(renderer,textTexture, textSurface, font , option6 , posX , posY + 5 * offset ) ;
+    displayOption(renderer,textTexture, textSurface, font , option6 , posX , posY + 5 * offset ) ;
     displayOption(renderer,textTexture, textSurface, font , option7 , posX , posY + 6 * offset ) ;
     displayOption(renderer,textTexture, textSurface, font , option8 , posX , posY + 7 * offset) ;
     displayOption(renderer,textTexture, textSurface, font , option9 , posX , posY + 8 * offset ) ;
     displayOption(renderer,textTexture, textSurface, font , option10 , posX , posY + 9 * offset) ;
     displayOption(renderer,textTexture, textSurface, font , option11 , posX , posY + 10 * offset) ;
-/*
- */}
+    displayOption(renderer,textTexture, textSurface, font , option12 , posX , posY + 11 * offset) ;
+    displayOption(renderer,textTexture, textSurface, font , option13 , posX , posY + 12 * offset) ;
+    displayOption(renderer,textTexture, textSurface, font , option14 , posX , posY + 13 * offset) ;
+    displayOption(renderer,textTexture, textSurface, font , option15 , posX , posY + 14 * offset) ;
+
+}
 
 
 
@@ -437,11 +446,39 @@ int main() {
                             break;
                     case SDLK_d:
                         system("clear");
-                        int i ;
-                        printf("0.Logical deletion \t 1.Physical deletion \n") ;
-                        scanf("%d" , &i) ;
-                        (   i==1) ? deleteRecordPhysically(" " , 0) : deleteRecordLogically(" " , 0) ;
+                        char temp_d[MAX_SIZE_FILENAME] ;
+                        printf("enter file name : ");
+                        fgets(temp_d , sizeof(temp_d) , stdin);
+                        cleanString(temp_d) ;
+                        if (isTherethisFile(allocationTable,temp_d) < 0)
+                        {
+                            printErrorMessage("THIS FILE DOESNT EXIST" , RED) ;
+                        }
+                        else
+                        {
+                            int i ;
+                            printf("0.Logical deletion \t 1.Physical deletion \n") ;
+                            scanf("%d" , &i) ;
+                            int id ;
+                            printf("enter the id : ") ;
+                            scanf("%d" , &id) ;
+                            int arr[2] = {-1 , -1} ;
+                            searchRecord(temp_d ,id , arr ) ;
+                            if (arr[0] == -1)
+                            {
+                                printErrorMessage("THIS RECORD DOESN'T EXIST\n", RED);
+                            }
+                            else
+                            {
+                            (i==1) ? deleteRecordPhysically(temp_d , id) : deleteRecordLogically(temp_d , id) ;
+                                
+                            }
+                            
 
+                        }
+                        
+
+                        
                             break;
                     // valid
                     case SDLK_f:
@@ -533,7 +570,43 @@ int main() {
                             printMetadata(temp_z) ;
                         }
                         
-                        break;    
+                        break;   
+                    case SDLK_o :
+                        int arr[2] = {-1 , -1} ;
+
+                        int id_lookfor ;
+                        char temp_o[MAX_SIZE_FILENAME] ;
+                            printf("enter the file name : ");
+                        fgets(temp_o , sizeof(temp_o) , stdin) ;
+
+                        cleanString(temp_o) ;
+
+                        if (isTherethisFile(allocationTable , temp_o) < 0)
+                        {
+                            printErrorMessage("THIS FILE DOESNT EXIST" , RED) ;
+                        }
+                        else
+                        {
+                            printf("Enter the ID : ");
+                            scanf("%d" , &id_lookfor) ;
+                            getchar() ;
+                            searchRecord(temp_o , id_lookfor , arr) ;
+                                char buffer[50] ;
+                            if (arr[0] < 0)
+                            {
+                                sprintf(buffer , "PRODUCT WITH ID : %d DOESNT EXIST" , id_lookfor) ;
+                                printErrorMessage( buffer, RED) ;
+                            }
+                            else
+                            {
+                                sprintf(buffer , "PRODUCT WITH ID : %d IS AT %d" , id_lookfor, arr[0]) ;
+                                printErrorMessage( buffer, GREEN) ;
+                                
+                            }
+                            
+                        }
+                        
+                        break;        
                     default :
                         printf("%s\n" , allocationTable.files[2].fileName);
                                 break;

@@ -6,7 +6,7 @@
 
 void discInisilize(AllocationTable *allocationTable ) {
     int n , m ;
-    do
+ /*    do
     {
         printf("enter the total number of blocs : (must be strictly higher than 0 and less then %d) : " , MAX_SIZE_BLOCS_NUMBER) ;
         scanf("%d" , &n) ;
@@ -18,10 +18,10 @@ void discInisilize(AllocationTable *allocationTable ) {
         scanf("%d" , &m) ;
     } while (m<1 || m>MAX_SIZE_RECORDS_NUMBER);
     
-    getchar();
-    allocationTable->blockageFactor = m ;
+    getchar(); */
+    // allocationTable->blockageFactor = 0 ;
     allocationTable->totalNumberOfBlocs = MAX_FILES ;
-    allocationTable->totalNumberOfUsedBlocs=0 ;
+    allocationTable->totalNumberOfUsedBlocs = 0 ;
     allocationTable->length=0 ;
     for (int i = 0; i < MAX_FILES; i++)
     {

@@ -1,0 +1,91 @@
+\documentclass[a4paper,12pt]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx} % For including screenshots
+\usepackage{caption} % Better captions
+\usepackage{minted} % Code highlighting
+\usepackage{hyperref} % Clickable links
+\usepackage{geometry} % Margins
+\geometry{margin=1in}
+
+% Title Information
+\title{Report on Code Implementation}
+\author{Your Name}
+\date{\today}
+
+\begin{document}
+
+% Title Page
+\maketitle
+\tableofcontents
+\newpage
+
+% Introduction
+\section{Introduction}
+This report provides an overview of the code implementation. It highlights key aspects, explains the logic, and demonstrates results using screenshots.
+
+% Code Explanation
+\section{Code Explanation}
+Mainly the project has 3 principal folders : "secondary memory" ,\\ "meta data" , "allocation table" . 
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\linewidth]{img/Main_Menu.png}
+    \caption{Main Menu}
+    \label{fig:enter-label}
+\end{figure}
+
+% Screenshots Section
+
+\begin{figure}[h!]
+    \centering
+    % First Image
+    \begin{minipage}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/Secondary_Mem.png}
+        \caption*{Secondary Memory Folder}
+    \end{minipage}
+    \hfill
+    % Second Image
+    \begin{minipage}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/Allocation_Table.png}
+        \caption*{Allocation Table Folder}
+    \end{minipage}
+    \hfill
+    % Third Image
+    \begin{minipage}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/Meta_Data.png}
+        \caption*{Meta Data Folder}
+    \end{minipage}
+    
+    \label{fig:three-screenshots}
+\end{figure}
+
+\begin{minted}[linenos, breaklines, fontsize=\small]{java}
+public class HelloWorld {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+    }
+}
+\end{minted}
+
+The above code prints "Hello, World!" to the console.
+
+% Screenshots
+\section{Screenshots and Results}
+Figure~\ref{fig:screenshot} shows the program output.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{img/Main_Menu.png}
+    \caption{Program Output}
+    \label{fig:screenshot}
+\end{figure}
+
+% Conclusion
+\section{Conclusion}
+This report provided an overview of the implementation, explained the code, and presented results. The screenshots demonstrate the correct functionality of the program.
+
+\end{document}

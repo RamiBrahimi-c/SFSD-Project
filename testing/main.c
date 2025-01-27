@@ -9,7 +9,7 @@
 // ***************************************************************************************************
 
 
-
+/* 
 void createFileLinkedStructureBasedOnMetaData(MetaData metadata) {
      
     char temp[25] ;
@@ -31,38 +31,62 @@ void createFileLinkedStructureBasedOnMetaData(MetaData metadata) {
         return ;
     }   
 
-        printf("total number = %d blockage factor = %d \n" , metadata.totalNumberProducts , metadata.recordsNumber) ;
+        // printf("total number = %d blockage factor = %d \n" , metadata.totalNumberProducts , metadata.recordsNumber) ;
     
     
+
+
+
         BlocLinkedStructure buffer ;
 
         
-
-        int j = 1 ; int y = 0 ;
-        int i = 0 ;
-    while ( i < metadata.totalNumberProducts)
+ 
+        int j = 0 , i = 0 ; 
+        while ( i < metadata.totalNumberProducts)
     {
-        printf("************************** bloc number %d ********************\n", y++);
+
+        int totalNumBlocs = metadata.totalNumberProducts / metadata.recordsNumber ;
+        totalNumBlocs += (metadata.totalNumberProducts % metadata.recordsNumber == 0 ) ? 0 : 1 ;
+        // printf("total num blocs : %d\n" , totalNumBlocs);
+        if (j < totalNumBlocs-1)
+        {
+            buffer.nbBloc = metadata.recordsNumber ;
+            buffer.next = j + 1 ;
+            buffer.product = malloc(sizeof(Product)*buffer.nbBloc) ;
+            }
+        else if (j == totalNumBlocs-1)
+        {
+            buffer.next = -1 ;
+            buffer.nbBloc = metadata.totalNumberProducts%metadata.recordsNumber ;
+            buffer.product = malloc(sizeof(Product) * (buffer.nbBloc)) ;
+        }
+        
+
+
+        printf("************************** bloc number %d ********************\n", j + 1);
             int k = 0 ;
         while (k<metadata.recordsNumber && i < metadata.totalNumberProducts)
         {
-            fread(&(buffer.product[k]) , sizeof(buffer.product[k]) , 1 , product) ;
             
+            fread(&(buffer.product[k]) , sizeof(Product) , 1 , product) ;
            printf("Product ID: %d, Name: %s, Cost: %.2f, Deleted: %d  \n" , 
-                         buffer.product[k].id , buffer.product[k].name   ,buffer.product[k].cost ,buffer.product[k].deletedLogically  ) ;
-            // printf("i=%d\tj=%d\tk=%d\n" , i , j , k) ;
-            ++k  ;++i ;
+                    buffer.product[k].id , buffer.product[k].name   ,buffer.product[k].cost ,buffer.product[k].deletedLogically  ) ;
+            
+            ++k  ;++i ; 
         }
-        buffer.nbBloc = k ;
-        buffer.next = j++ ;
-            fwrite(&(buffer) , sizeof(buffer) , 1 , ptr);
-        printf("after charging k=%d \n", buffer.nbBloc);
+            //buffer.nbBloc = k ;
+             fwrite(&(buffer.next) , sizeof(buffer.next) , 1 , ptr);
+            fwrite((buffer.product) , sizeof(Product) , buffer.nbBloc , ptr);
+        printf("(after charging ) buffer.nbBloc = %d \n", buffer.nbBloc);
+            free(buffer.product) ;
+        
+        ++j;
     }
     
     
 }
 
-
+ */
 
 
 void writeProducts() {
@@ -318,7 +342,7 @@ void createFileBasedOnMetaData(MetaData metadata) {
             ++k  ;++i ; 
         }
             //buffer.nbBloc = k ;
-            fwrite(&(buffer.nbBloc) , sizeof(buffer.nbBloc) , 1 , ptr);
+            // fwrite(&(buffer.nbBloc) , sizeof(buffer.nbBloc) , 1 , ptr);
             fwrite((buffer.product) , sizeof(Product) , buffer.nbBloc , ptr);
         printf("(after charging ) buffer.nbBloc = %d \n", buffer.nbBloc);
             free(buffer.product) ;
@@ -499,9 +523,77 @@ void displayFile(FILE *ptr , MetaData metadata) {
    
         printf("************************** bloc number %d ********************\n", j + 1);
             int k = 0 ;
-            fread(&(buffer.nbBloc) , sizeof(buffer.nbBloc) , 1 , ptr) ;
+           // fread(&(buffer.nbBloc) , sizeof(buffer.nbBloc) , 1 , ptr) ;
             int result = fread((buffer.product) , sizeof(Product) , metadata.recordsNumber , ptr) ;
 
+
+            while (k<metadata.recordsNumber && i < metadata.totalNumberProducts)
+        {
+            
+            printf("Product ID: %d, Name: %s, Cost: %.2f, Deleted: %d  \n" , 
+                         buffer.product[k].id , buffer.product[k].name   ,buffer.product[k].cost ,buffer.product[k].deletedLogically  ) ;
+          
+            ++k  ;++i ; 
+        
+        }
+        printf("after charging buffer.nbBloc =%d \n", buffer.nbBloc);
+        free(buffer.product) ;
+        ++j ;
+    }
+
+        printf("********************************\n");
+        fseek(ptr , 0 , SEEK_END) ;
+        int length =  ftell(ptr)/sizeof(Product) ;
+        printf("lenght = %d \n" ,length ) ;  
+
+        printf("*****************************************************************************\n");
+
+}
+
+void displayFileLinkedStruct(FILE *ptr , MetaData metadata) {
+     rewind(ptr);
+     
+     
+     
+     
+     
+        printf("*****************************************************************************\n");
+
+        printf("total number = %d blockage factor = %d \n" , metadata.totalNumberProducts , metadata.recordsNumber) ;
+    
+    
+        BlocLinkedStructure buffer ;
+        
+        int j = 0 ; 
+        int i = 0 ;
+        int index = 0 ;
+
+        while ( i < metadata.totalNumberProducts  && index != -1)
+    {
+        int totalNumBlocs = metadata.totalNumberProducts / metadata.recordsNumber ;
+        totalNumBlocs += (metadata.totalNumberProducts % metadata.recordsNumber == 0 ) ? 0 : 1 ;
+        if (j < totalNumBlocs-1)
+        {
+            buffer.nbBloc = metadata.recordsNumber ;
+            buffer.product = malloc(sizeof(Product)*buffer.nbBloc) ;
+            }
+        else if (j == totalNumBlocs-1)
+        {
+            buffer.nbBloc = metadata.totalNumberProducts%metadata.recordsNumber ;
+            buffer.product = malloc(sizeof(Product) * (buffer.nbBloc)) ;
+        }
+   
+   
+   
+   
+        printf("************************** bloc number %d ********************\n", j + 1);
+            int k = 0 ;
+            fseek(ptr , sizeof(buffer.next) * index, SEEK_SET) ;
+            fseek(ptr , sizeof(Product)*metadata.recordsNumber * index, SEEK_CUR) ;
+            fread(&(buffer.next) , sizeof(buffer.next) , 1 , ptr) ;
+            int result = fread((buffer.product) , sizeof(Product) , metadata.recordsNumber , ptr) ;
+            index = buffer.next ;
+            printf("%d\n" , buffer.next) ;
 
             while (k<metadata.recordsNumber && i < metadata.totalNumberProducts)
         {
@@ -597,7 +689,7 @@ int main() {
     // readProducts() ;
 
 
-    MetaData metadata = {"file"};
+    MetaData metadata = {"file2"};
     metadata.totalNumberProducts = 11 ;
     metadata.recordsNumber = 3 ;
     metadata.blocsNumber = 4 ;
@@ -605,7 +697,7 @@ int main() {
     metadata.internOrganizationMode = 'n' ;
 
 
-    FILE *ptr = fopen("y" , "rb+") ;
+    FILE *ptr = fopen("file2" , "rb+") ;
     if (ptr == NULL)
     {
         printf("can't open test file \n");
@@ -620,14 +712,26 @@ int main() {
         strcpy(product.name , "we are cooked") ;
 
 
+    // createFileBasedOnMetaData(metadata) ;
+
+        // createFileLinkedStructureBasedOnMetaData(metadata) ;
+
+        displayFileLinkedStruct(ptr , metadata) ;
+
+        int index ;
+        BlocLinkedStructure buffer ;
+        fseek(ptr , sizeof(buffer.next) * index , SEEK_SET) ;
 
 
-    displayFile(ptr , metadata) ;
+
+    //    displayFile(ptr , metadata) ;
+
+/*  
 
     insertRecordTest2(ptr , &metadata , product) ;
 
     displayFile(ptr , metadata) ;
-
+ */
 
 
 

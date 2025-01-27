@@ -81,7 +81,7 @@ void chargeFile( char *fileName  , MetaData metaData) {
             return ;
         }
 
-    createFileBasedOnMetaDataContiguousStructure(ptr , metaData) ;
+    (metaData.globalOrganizationMode == 'c') ? createFileBasedOnMetaDataContiguousStructure(ptr , metaData): createFileLinkedStructureBasedOnMetaData(ptr , metaData) ;
 
 
 
@@ -162,7 +162,7 @@ void createFileBasedOnMetaDataContiguousStructure(FILE *ptr, MetaData metadata) 
             ++k  ;++i ; 
         }
             //buffer.nbBloc = k ;
-            fwrite(&(buffer.nbBloc) , sizeof(buffer.nbBloc) , 1 , ptr);
+           // fwrite(&(buffer.nbBloc) , sizeof(buffer.nbBloc) , 1 , ptr);
             fwrite((buffer.product) , sizeof(Product) , buffer.nbBloc , ptr);
         printf("(after charging ) buffer.nbBloc = %d \n", buffer.nbBloc);
             free(buffer.product) ;
@@ -175,11 +175,144 @@ void createFileBasedOnMetaDataContiguousStructure(FILE *ptr, MetaData metadata) 
 }
 
 
+
+void createFileLinkedStructureBasedOnMetaData(FILE *ptr ,MetaData metadata) {
+     
+
+
+    FILE *product = fopen((metadata.internOrganizationMode == 's') ? "./important files/products" : "./important files/products(shuffled)" , "rb+");
+    if (product == NULL)
+    {
+        printf("can't open products file \n");
+        return ;
+    }   
+
+        // printf("total number = %d blockage factor = %d \n" , metadata.totalNumberProducts , metadata.recordsNumber) ;
+    
+    
+
+
+
+        BlocLinkedStructure buffer ;
+
+        
+ 
+        int j = 0 , i = 0 ; 
+        while ( i < metadata.totalNumberProducts)
+    {
+
+        int totalNumBlocs = metadata.totalNumberProducts / metadata.recordsNumber ;
+        totalNumBlocs += (metadata.totalNumberProducts % metadata.recordsNumber == 0 ) ? 0 : 1 ;
+        // printf("total num blocs : %d\n" , totalNumBlocs);
+        if (j < totalNumBlocs-1)
+        {
+            buffer.nbBloc = metadata.recordsNumber ;
+            buffer.next = j + 1 ;
+            buffer.product = malloc(sizeof(Product)*buffer.nbBloc) ;
+            }
+        else if (j == totalNumBlocs-1)
+        {
+            buffer.next = -1 ;
+            buffer.nbBloc = metadata.totalNumberProducts%metadata.recordsNumber ;
+            buffer.product = malloc(sizeof(Product) * (buffer.nbBloc)) ;
+        }
+        
+
+
+        printf("************************** bloc number %d ********************\n", j + 1);
+            int k = 0 ;
+        while (k<metadata.recordsNumber && i < metadata.totalNumberProducts)
+        {
+            
+            fread(&(buffer.product[k]) , sizeof(Product) , 1 , product) ;
+           printf("Product ID: %d, Name: %s, Cost: %.2f, Deleted: %d  \n" , 
+                    buffer.product[k].id , buffer.product[k].name   ,buffer.product[k].cost ,buffer.product[k].deletedLogically  ) ;
+            
+            ++k  ;++i ; 
+        }
+            //buffer.nbBloc = k ;
+             fwrite(&(buffer.next) , sizeof(buffer.next) , 1 , ptr);
+            fwrite((buffer.product) , sizeof(Product) , buffer.nbBloc , ptr);
+        printf("(after charging ) buffer.nbBloc = %d \n", buffer.nbBloc);
+            free(buffer.product) ;
+        
+        ++j;
+    }
+    
+    
+}
+
+
+
+void displayFileLinkedStruct(FILE *ptr , MetaData metadata) {
+     rewind(ptr);
+     
+     
+     
+     
+     
+        printf("*****************************************************************************\n");
+
+        printf("total number = %d blockage factor = %d \n" , metadata.totalNumberProducts , metadata.recordsNumber) ;
+    
+    
+        BlocLinkedStructure buffer ;
+        
+        int j = 0 ; 
+        int i = 0 ;
+        int index = 0 ;
+
+        while ( i < metadata.totalNumberProducts  && index != -1)
+    {
+        int totalNumBlocs = metadata.totalNumberProducts / metadata.recordsNumber ;
+        totalNumBlocs += (metadata.totalNumberProducts % metadata.recordsNumber == 0 ) ? 0 : 1 ;
+        if (j < totalNumBlocs-1)
+        {
+            buffer.nbBloc = metadata.recordsNumber ;
+            buffer.product = malloc(sizeof(Product)*buffer.nbBloc) ;
+            }
+        else if (j == totalNumBlocs-1)
+        {
+            buffer.nbBloc = metadata.totalNumberProducts%metadata.recordsNumber ;
+            buffer.product = malloc(sizeof(Product) * (buffer.nbBloc)) ;
+        }
+   
+   
+   
+   
+        printf("************************** bloc number %d ********************\n", j + 1);
+            int k = 0 ;
+            fseek(ptr , sizeof(buffer.next) * index, SEEK_SET) ;
+            fseek(ptr , sizeof(Product)*metadata.recordsNumber * index, SEEK_CUR) ;
+            fread(&(buffer.next) , sizeof(buffer.next) , 1 , ptr) ;
+            int result = fread((buffer.product) , sizeof(Product) , metadata.recordsNumber , ptr) ;
+            index = buffer.next ;
+            printf("%d\n" , buffer.next) ;
+
+            while (k<metadata.recordsNumber && i < metadata.totalNumberProducts)
+        {
+            
+            printf("Product ID: %d, Name: %s, Cost: %.2f, Deleted: %d  \n" , 
+                         buffer.product[k].id , buffer.product[k].name   ,buffer.product[k].cost ,buffer.product[k].deletedLogically  ) ;
+          
+            ++k  ;++i ; 
+        
+        }
+        printf("after charging buffer.nbBloc =%d \n", buffer.nbBloc);
+        free(buffer.product) ;
+        ++j ;
+    }
+
+        printf("********************************\n");
+        fseek(ptr , 0 , SEEK_END) ;
+        int length =  ftell(ptr)/sizeof(Product) ;
+        printf("lenght = %d \n" ,length ) ;  
+
+        printf("*****************************************************************************\n");
+
+}
+
 void displayFileContent(char *fileName) {
-     
-    //  setFullPathtoSecondMemFolder(fileName) ;
-    //  setFullPathtoMetadataFolder(fileName) ;
-     
 
     strcpy(fullPath , secondMemFolder);
     strcat(fullPath , fileName) ;
@@ -204,13 +337,22 @@ void displayFileContent(char *fileName) {
     fread(&metadata , sizeof(metadata) , 1 , temp) ;
 
     fclose(temp) ;
+    system("clear");
+    printMetadata(fileName) ;
+    metadata.globalOrganizationMode=='c' ? displayFileContentContiguous(ptr , metadata) : displayFileLinkedStruct(ptr , metadata) ;
+
+}
+
+void displayFileContentContiguous(FILE *ptr , MetaData metadata) {
+     
+
      
      
      
      
      
         rewind(ptr) ;
-        system("clear");
+        // system("clear");
         printf("*****************************************************************************\n");
 
         printf("total number = %d blockage factor = %d \n" , metadata.totalNumberProducts , metadata.recordsNumber) ;
@@ -242,7 +384,7 @@ void displayFileContent(char *fileName) {
    
         printf("************************** bloc number %d ********************\n", j + 1);
             int k = 0 ;
-            fread(&(buffer.nbBloc) , sizeof(buffer.nbBloc) , 1 , ptr) ;
+          //  fread(&(buffer.nbBloc) , sizeof(buffer.nbBloc) , 1 , ptr) ;
             int result = fread((buffer.product) , sizeof(Product) , metadata.recordsNumber , ptr) ;
 
 
@@ -433,7 +575,7 @@ int deleteFileMetaData( char *metadata)  {
 void searchRecord( char *fileName, int id , int *result) {
     
     strcpy(fullPath2 , metaDataFolder) ;
-    strcpy(fullPath2 , fileName) ;
+    strcat(fullPath2 , fileName) ;
 
 
 
@@ -448,7 +590,7 @@ void searchRecord( char *fileName, int id , int *result) {
     
     fread(&metadata , sizeof(metadata) , 1 , ptr) ;
 
-    fclose(ptr) ;
+   // fclose(ptr) ;
 
     setFullPathtoSecondMemFolder(fileName) ;
 
@@ -464,7 +606,7 @@ void searchRecordContiguousStructure(FILE *ptr ,  int id, int *result , MetaData
 
     rewind(ptr) ;
     fseek(ptr , 0 , SEEK_END) ;
-    int length = ftell(ptr) / sizeof(BlocContiguousStructure) ;
+    int length = ftell(ptr) / sizeof(Product) ;
     rewind(ptr) ;
 
     int k = metadata.recordsNumber ;
@@ -472,52 +614,43 @@ void searchRecordContiguousStructure(FILE *ptr ,  int id, int *result , MetaData
     result[0]=-1 ;
     result[1]=-1 ;
 
+    BlocContiguousStructure buffer ;
+    buffer.nbBloc = 1 ;
+    buffer.product = malloc(sizeof(Product) ) ;
     if (metadata.internOrganizationMode == 's') { // binary search
-        int left , right  , mid  ; 
+        int left = metadata.firstBlocAddress , right  = metadata.totalNumberProducts-1, mid ; 
         
-            fseek(ptr , metadata.firstBlocAddress * sizeof(bufferContiguousStruct) , SEEK_SET) ;
-        for (int i = metadata.firstBlocAddress; i < length; i++)
-        {
-            fread(&bufferContiguousStruct , sizeof(bufferContiguousStruct) , 1 , ptr) ;
-            left = 0 ;
-            right = bufferContiguousStruct.nbBloc ;
-            while (left <= right)
+        while (left <= right)
             {
+                mid = left + (right-left) /2   ;
+                fseek(ptr , mid * sizeof(Product) , SEEK_SET) ;
+                fread(buffer.product , sizeof(Product) , buffer.nbBloc , ptr) ;
                 mid =  left + (right - left) / 2 ;
-                if(bufferContiguousStruct.product[mid].id == id) {
-                    result[0] = i ;
+                if(buffer.product[0].id == id) {
                     result[0] = mid ;
                     return ;
-                } else if (bufferContiguousStruct.product[mid].id > id) {
+                } else if (buffer.product[0].id > id) {
                     right = mid - 1 ;
                 } else {
                     left = mid + 1 ;
                 }
             }
             
-        }
+        
         
         
     } else { // linear search
-            fseek(ptr , metadata.firstBlocAddress * sizeof(bufferContiguousStruct) , SEEK_SET) ;
-        for (int i = metadata.firstBlocAddress; i < length; i++)
+            fseek(ptr , metadata.firstBlocAddress * sizeof(Product) , SEEK_SET) ;
+        for (int i = 0; i < metadata.totalNumberProducts; i++)
         {
-            fread(&bufferContiguousStruct , sizeof(bufferContiguousStruct) , 1 , ptr) ;
-            int j =0 ;
-            while (j < bufferContiguousStruct.nbBloc)
-            {
-                if (bufferContiguousStruct.product[j].id == id)
+            fread(buffer.product , sizeof(Product) , buffer.nbBloc , ptr) ;
+            
+                if (buffer.product[0].id == id)
                 {
                     result[0] = i ;
-                    result[1] = j ;
                     return ;
                 }
-                ++j ;
-            }
-            
-            
         }
-        
 
     }
 
@@ -834,7 +967,7 @@ void deleteRecordLogically( char *fileName , int id) {
 
 void deleteRecordPhysically( char *fileName ,int id ) {
     strcpy(fullPath2 , metaDataFolder) ;
-    strcpy(fullPath2 , fileName) ;
+    strcat(fullPath2 , fileName) ;
 
 
 
@@ -849,7 +982,7 @@ void deleteRecordPhysically( char *fileName ,int id ) {
     
     fread(&metadata , sizeof(metadata) , 1 , ptr) ;
 
-    fclose(ptr) ;
+   // fclose(ptr) ;
 
     setFullPathtoSecondMemFolder(fileName) ;
 
@@ -865,7 +998,7 @@ void deleteRecordPhysically( char *fileName ,int id ) {
 
     int result[2] = {-1 , -1} ;
     searchRecord(fileName , id , result) ;
-    if (result[0]==-1 || result[1]==-1) {
+    if (result[0]==-1 ) {
         printf("doesn't exist\n") ;
         return ;
     }
@@ -873,12 +1006,53 @@ void deleteRecordPhysically( char *fileName ,int id ) {
 
 
     if (metadata.globalOrganizationMode == 'c') {
-        fseek(ptr , i * sizeof(bufferContiguousStruct) , SEEK_SET) ;
-        fread(&bufferContiguousStruct , sizeof(bufferContiguousStruct) , 1 , ptr ) ;
 
-        bufferContiguousStruct.nbBloc = deleteRecordfromArray(bufferContiguousStruct.product , bufferContiguousStruct.nbBloc , id) ;
-        fseek(ptr , i * sizeof(bufferContiguousStruct) , SEEK_SET) ;
-        fwrite(&bufferContiguousStruct , sizeof(bufferContiguousStruct) , 1 , ptr ) ;
+        char temp_file[50] ;
+        strcpy(temp_file , secondMemFolder);
+        strcat(temp_file , "temp");
+
+        FILE *temp = fopen(temp_file , "wb+") ;
+        if (temp == NULL)
+        {
+            printf("can't open this file : %s\n" , fullPath) ;
+            return;
+        }
+        
+
+        BlocContiguousStructure buffer ;
+        buffer.nbBloc=1 ;
+        buffer.product = malloc(sizeof(Product)*buffer.nbBloc) ;
+        fseek(ptr , metadata.firstBlocAddress *sizeof(Product) , SEEK_SET) ;
+        while (fread(buffer.product , sizeof(Product) , buffer.nbBloc , ptr))
+        {
+            int i = 0 ;
+            if (buffer.product[0].id!=id)
+            {
+                fwrite(buffer.product , sizeof(Product) , buffer.nbBloc , temp) ;
+            }
+            
+            
+        }
+        fclose(temp) ;
+        fclose(ptr) ;
+        setFullPathtoSecondMemFolder(fileName) ;
+        remove(fullPath) ;
+        rename(temp_file , fullPath ) ;
+        metadata.totalNumberProducts-- ;
+
+                    int totalNumBlocs = metadata.totalNumberProducts / metadata.recordsNumber ;
+        totalNumBlocs += (metadata.totalNumberProducts % metadata.recordsNumber == 0 ) ? 0 : 1 ;
+        metadata.blocsNumber = totalNumBlocs ;
+        
+        setFullPathtoMetadataFolder(fileName) ;
+        FILE *m = fopen(fullPath2 , "wb+");
+        if (m == NULL)
+        {
+            printf("can't open %s" , fullPath2) ;
+            return ;
+        }
+        fwrite(&metadata , sizeof(metadata) , 1 , m) ;
+        fclose(m) ;
 
     } else {
         fseek(ptr , i * sizeof(bufferLinkedStruct) , SEEK_SET) ;
@@ -889,7 +1063,7 @@ void deleteRecordPhysically( char *fileName ,int id ) {
         fwrite(&bufferLinkedStruct , sizeof(bufferLinkedStruct) , 1 , ptr ) ;
 
     }
-    fclose(ptr) ;    
+  //  fclose(ptr) ;    
 
 }
 
